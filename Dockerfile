@@ -1,7 +1,8 @@
 FROM node:12-alpine as build
 
 WORKDIR /app
-COPY ./package.json ./package-lock.json ./angular.json ./tsconfig.json ./tslint.json ./src .browserslistrc ./
+COPY ./package.json ./package-lock.json ./angular.json ./tsconfig.json ./tslint.json .browserslistrc ./
+COPY ./src ./src
 RUN npm install
 RUN npm install -g @angular/cli
 RUN ng build --configuration production --output-path=/dist
