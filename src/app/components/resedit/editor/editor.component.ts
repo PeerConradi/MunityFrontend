@@ -149,12 +149,15 @@ export class EditorComponent implements OnInit {
     this.service.pushResolution(this.resolution).subscribe(n => { });
   }
 
-  addPreambleParagraph() {
+  async addPreambleParagraph() {
     const paragraph = new PreambleParagraph();
+    paragraph.preambleParagraphId = 'munityng' + this.service.generateId();
     this.model.preamble.paragraphs.push(paragraph);
 
     if (this.isPublic) {
-      this.service.savePublicResolution(this.model).subscribe();
+      paragraph.locked = true;
+      await this.service.savePublicResolution(this.model).toPromise();
+      paragraph.locked = false;
     }
   }
 
@@ -172,7 +175,7 @@ export class EditorComponent implements OnInit {
 
   addOperativeParagraph() {
     const paragraph = new OperativeParagraph();
-    paragraph.operativeParagraphId = this.service.generateId();
+    paragraph.operativeParagraphId = 'munityng' + this.service.generateId();
     this.model.operativeSection.paragraphs.push(paragraph);
 
     if (this.isPublic) {

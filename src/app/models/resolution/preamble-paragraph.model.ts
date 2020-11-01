@@ -8,4 +8,6 @@ export class PreambleParagraph {
   notices: Notice[] = [];
 
   differsFromServer: boolean = false;
+
+  locked: boolean = false;
 }

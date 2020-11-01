@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Session } from 'inspector';
 import { resolve } from 'dns';
 import { Registration } from '../models/registration.model';
@@ -8,6 +8,7 @@ import { User } from '../models/user.model';
 import { UserAuths } from '../models/user-auths.model';
 import { AuthenticationResponse } from '../models/authentication-response.model';
 import { GlobalsService } from './globals.service';
+import { catchError, shareReplay } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -51,8 +52,17 @@ export class UserService {
   }
 
   public async login(username: string, password: string): Promise<boolean> {
+    let logginSuccess = false;
     const auth = new AuthenticateRequest(username, password);
-    const result = await this.http.post<AuthenticationResponse>(this.baseUrl + 'api/user/login', auth).toPromise();
+    let request = this.http.post<AuthenticationResponse>(this.baseUrl + 'api/user/login', auth);
+    request.pipe(
+      shareReplay(1),
+      catchError(error => {
+        console.log('Run into error @ login')
+        console.log(error);
+        return of(null);
+      }));
+    var result = await request.toPromise();
     if (result != null) {
       this.globalsService.session = result;
       this.setSessionkey(result);

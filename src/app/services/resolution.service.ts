@@ -87,6 +87,11 @@ export class ResolutionService {
     return this.httpClient.patch<Resolution>(this.baseUrl + 'api/Resolution/UpdatePublicResolution', resolution);
   }
 
+  public updatePublicResolutionPreambleParagraph(resolution: Resolution, paragraph: PreambleParagraph) {
+    return this.httpClient.patch(this.baseUrl + 'api/Resolution/UpdatePublicResolutionPreambleParagraph?resolutionId=' + resolution.resolutionId,
+      paragraph);
+  }
+
   public getMyResolutions() {
     let headers = new HttpHeaders();
     let options = { headers: headers };
@@ -207,17 +212,15 @@ export class ResolutionService {
       //this.resolution.OperativeSections.filter(n => n.ID == id)[0].Text = text;
     });
 
-    //this._hubConnection.on('PreambleParagraphChanged', (paragraph: PreambleParagraph) => {
-
-    //  let target = model.Preamble.Paragraphs.find(n => n.ID == paragraph.ID);
-    //  if (target != null && target.Text != paragraph.Text) {
-    //    target.Text = paragraph.Text;
-    //  }
-    //  if (target != null && target.Notices != paragraph.Notices) {
-    //    target.Notices = paragraph.Notices;
-    //  }
-
-    //});
+    this._hubConnection.on('PreambleParagraphChanged', (resolutionid: string, paragraph: PreambleParagraph) => {
+      let target = model.preamble.paragraphs.find(n => n.preambleParagraphId == paragraph.preambleParagraphId);
+      if (target != null && target.text != paragraph.text) {
+        target.text = paragraph.text;
+      }
+      if (target != null && target.notices != paragraph.notices) {
+        target.notices = paragraph.notices;
+      }
+    });
 
     //this._hubConnection.on('OperativeParagraphChanged', (paragraph: OperativeSection) => {
 
@@ -496,6 +499,32 @@ export class ResolutionService {
       options).subscribe(data => { }, err => { this.notifyService.notify('error', 'Das hat nicht geklappt :('); });
   }
 
+  // This method delete a operative paragraph and also removes all amendments that are pointing at this operative paragraph.
+  public removeOperativeParagraphNew(resolution: Resolution, paragraph: OperativeParagraph): boolean {
+    const index: number = resolution.operativeSection.paragraphs.indexOf(paragraph);
+    if (index !== -1) {
+      resolution.operativeSection.paragraphs.splice(index, 1);
+      var deleteAmendments = resolution.operativeSection.deleteAmendments.filter(n => n.targetSectionId == paragraph.operativeParagraphId);
+      deleteAmendments.forEach(n => {
+        const index = resolution.operativeSection.deleteAmendments.indexOf(n);
+        if (index !== -1) {
+          resolution.operativeSection.deleteAmendments.splice(index, 1);
+        }
+      });
+
+      var changeAmendments = resolution.operativeSection.changeAmendments.filter(n => n.targetSectionId == paragraph.operativeParagraphId);
+      changeAmendments.forEach(n => {
+        const index = resolution.operativeSection.changeAmendments.indexOf(n);
+        if (index !== -1) {
+          resolution.operativeSection.changeAmendments.splice(index, 1);
+        }
+      });
+      return true;
+    }
+
+    return false;
+  }
+
   public getAdvancedInfos(resolutionid: string) {
     let headers = new HttpHeaders();
     headers = headers.set('Content-Type', 'application/json; charset=utf-8');
@@ -648,6 +677,22 @@ export class ResolutionService {
     let options = { headers: headers };
     this.httpClient.patch(this.baseUrl + 'api/Resolution/SubmitAmendment', null,
       options).subscribe(data => { }, err => { this.notifyService.notify('error', 'Das hat nicht geklappt :('); });
+  }
+
+  // Submits an amendment and will return true if this is performed successful
+  submitAmendmentNew(resolution: Resolution, amendment: AbstractAmendment): boolean {
+    if (amendment.type == 'DeleteAmendment') {
+      const deleteAmendment: DeleteAmendment = amendment as DeleteAmendment;
+      const targetSectionIndex: number = resolution.operativeSection.paragraphs.findIndex(n => n.operativeParagraphId == amendment.targetSectionId);
+      const amendmentIndex: number = resolution.operativeSection.deleteAmendments.indexOf(deleteAmendment);
+      if (targetSectionIndex === -1) return false;
+      if (amendmentIndex === -1) return false;
+      resolution.operativeSection.paragraphs.splice(targetSectionIndex, 1);
+      resolution.operativeSection.deleteAmendments.splice(amendmentIndex, 1);
+      return true;
+    }
+
+    return false;
   }
 
   public getResolutionsOfConference(conferenceid: string) {

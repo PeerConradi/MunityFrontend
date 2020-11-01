@@ -39,7 +39,7 @@ export class LoginFormComponent implements OnInit {
   get f() { return this.loginForm.controls; }
 
 
-  onSubmit() {
+  async onSubmit() {
     this.submitted = true;
 
     // stop here if form is invalid
@@ -50,20 +50,17 @@ export class LoginFormComponent implements OnInit {
 
     this.loading = true;
 
-
-    this.userService.login(this.f.username.value, this.f.password.value).then(n => {
+    var result = await this.userService.login(this.f.username.value, this.f.password.value);
+    if (result) {
       this.loading = false;
-      if (n) {
-        this.error = false;
-        this.success = true;
-        this.routerService.navigate(['/']);
-      } else {
-        this.loading = false;
-        this.error = true;
-        this.success = false;
-      }
-    });
-
+      this.success = true;
+      this.routerService.navigate(['/']);
+    }
+    else {
+      this.loading = false;
+      this.error = true;
+      this.success = false;
+    }
   }
 
   fieldGotFocus() {

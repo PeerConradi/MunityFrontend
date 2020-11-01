@@ -47,6 +47,7 @@ export class OperativeParagraphComponent implements OnInit {
   }
 
   onKey(event: any) {
+    this.saveState = 'N';
     this.paragraph.text = event.target.value;
 
     if (!this.waitToSave) {
@@ -91,7 +92,11 @@ export class OperativeParagraphComponent implements OnInit {
   }
 
   delete() {
-    this.service.removeOperativeParagraph(this.resolution.resolutionId, this.paragraph.operativeParagraphId);
+
+    const res = this.service.removeOperativeParagraphNew(this.resolution, this.paragraph);
+    if (res) {
+      this.service.savePublicResolution(this.resolution).subscribe();
+    }
   }
 
   moveUp() {

@@ -40,6 +40,7 @@ export class PreambleParagraphComponent implements OnInit {
   constructor(private service: ResolutionService, private userService: UserService) { }
 
   onKey(event: any) {
+    this.saveState = 'N';
     this.paragraph.text = event.target.value;
 
     if (!this.waitToSave) {
@@ -52,7 +53,7 @@ export class PreambleParagraphComponent implements OnInit {
     await this.delay(3000);
     //Wait for a few seconds before trying to save
 
-    this.service.savePublicResolution(this.resolution).subscribe(n => {
+    this.service.updatePublicResolutionPreambleParagraph(this.resolution, this.paragraph).subscribe(n => {
       this.saveState = 'S';
       this.waitToSave = false;
     },
@@ -61,18 +62,8 @@ export class PreambleParagraphComponent implements OnInit {
         this.saveRequestCount++;
         // try to save again
         this.saveChanges();
-      });
-
-    // this.service.changePreambleParagraph(this.paragraph).subscribe(n => {
-    //   this.saveState = 'S';
-    //   this.waitToSave = false;
-    // },
-    //   err => {
-    //     this.saveState = 'E';
-    //     this.saveRequestCount++;
-    //     // try to save again
-    //     this.saveChanges();
-    //   });
+      }
+    );
   }
 
   delay(ms: number) {
@@ -83,15 +74,30 @@ export class PreambleParagraphComponent implements OnInit {
   }
 
   delete() {
-    this.service.removePrembleParagraph(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
+    const index: number = this.resolution.preamble.paragraphs.indexOf(this.paragraph);
+    if (index !== -1) {
+      this.resolution.preamble.paragraphs.splice(index, 1);
+      this.service.savePublicResolution(this.resolution).subscribe();
+    }
+    //this.service.removePrembleParagraph(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
   }
 
   moveUp() {
-    this.service.movePrembleParagraphUp(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
+    const index: number = this.resolution.preamble.paragraphs.indexOf(this.paragraph);
+    if (index !== -1 && index !== 0) {
+      this.resolution.preamble.paragraphs.splice(index - 1, 0, this.resolution.preamble.paragraphs.splice(index, 1)[0]);
+      this.service.savePublicResolution(this.resolution).subscribe();
+    }
+    //this.service.movePrembleParagraphUp(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
   }
 
   moveDown() {
-    this.service.movePrembleParagraphDown(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
+    const index: number = this.resolution.preamble.paragraphs.indexOf(this.paragraph);
+    if (index !== -1 && index <= this.resolution.preamble.paragraphs.length) {
+      this.resolution.preamble.paragraphs.splice(index + 1, 0, this.resolution.preamble.paragraphs.splice(index, 1)[0]);
+      this.service.savePublicResolution(this.resolution).subscribe();
+    }
+    //this.service.movePrembleParagraphDown(this.resolution.resolutionId, this.paragraph.preambleParagraphId);
   }
 
   showNotices(val) {

@@ -56,7 +56,11 @@ export class AmendmentControllerComponent implements OnInit {
   }
 
   submitAmendment() {
-    this.resolutionService.submitAmendment(this.resolution.resolutionId, this.amendment.id);
+    const result = this.resolutionService.submitAmendmentNew(this.resolution, this.amendment);
+    if (result) {
+      this.resolutionService.savePublicResolution(this.resolution).subscribe();
+    }
+    //this.resolutionService.submitAmendment(this.resolution.resolutionId, this.amendment.id);
   }
 
   isDeleteAmendment(val): boolean {

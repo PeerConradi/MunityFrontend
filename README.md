@@ -28,3 +28,10 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+## Setup API Endpoint
+
+To change the path of the API Endpoint go into the environment.ts and change it there!
+
+You can find the project ip and port inside the MUNityCore/Properties/launchSettings.json file.
+the default url is ```http://localhost:47584/``` with ```44349``` as sslPort.
